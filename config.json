@@ -1,0 +1,48 @@
+{
+  "regions": [
+    {
+      "name": "Область 1",
+      "left": -1902,
+      "top": 14,
+      "width": 555,
+      "height": 586
+    }
+  ],
+  "targets": [
+    {
+      "name": "Rayquaza",
+      "aliases": []
+    },
+    {
+      "name": "Latias",
+      "aliases": []
+    },
+    {
+      "name": "Charizard",
+      "aliases": []
+    },
+    {
+      "name": "Reshiram",
+      "aliases": []
+    }
+  ],
+  "threshold": 70,
+  "ocr_threshold": 130,
+  "cooldown_seconds": 0,
+  "lost_confirmation_scans": 2,
+  "scan_interval_seconds": 1.0,
+  "capture_interval_ms": 200,
+  "ocr_interval_ms": 500,
+  "preprocessing_mode": "balanced",
+  "debug_frames": false,
+  "debug_directory": "debug_frames",
+  "pipeline_diagnostics": false,
+  "tesseract_cmd": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+  "language": "eng",
+  "telegram_enabled": true,
+  "telegram_token": "",
+  "telegram_chat_id": "",
+  "sound_enabled": true,
+  "windows_notifications": true,
+  "telegram_send_screenshots": false
+}

@@ -1,0 +1,40 @@
+{
+  "regions": [
+    {
+      "name": "Радар",
+      "left": 100,
+      "top": 100,
+      "width": 420,
+      "height": 180
+    }
+  ],
+  "targets": [
+    {
+      "name": "Пикачу",
+      "aliases": ["Pikachu", "Пикачу"]
+    },
+    {
+      "name": "Иви",
+      "aliases": ["Eevee", "Иви"]
+    }
+  ],
+  "threshold": 85,
+  "ocr_threshold": 160,
+  "cooldown_seconds": 60,
+  "lost_confirmation_scans": 2,
+  "scan_interval_seconds": 1,
+  "capture_interval_ms": 150,
+  "ocr_interval_ms": 300,
+  "preprocessing_mode": "balanced",
+  "debug_frames": false,
+  "debug_directory": "debug_frames",
+  "pipeline_diagnostics": false,
+  "tesseract_cmd": "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+  "language": "eng",
+  "telegram_enabled": false,
+  "telegram_token": "",
+  "telegram_chat_id": "",
+  "sound_enabled": true,
+  "windows_notifications": true,
+  "telegram_send_screenshots": false
+}
