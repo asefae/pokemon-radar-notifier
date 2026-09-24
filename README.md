@@ -1,61 +1,100 @@
-# Pokémon Radar notifier (Windows)
+# Pokémon Radar Notifier (Windows)
 
-Локальный уведомитель для Pokémon-радара: приложение периодически **читает выбранные области экрана через OCR**, сравнивает распознанный текст с заданными именами и показывает Windows toast/звук. Оно не взаимодействует с игрой, не нажимает клавиши и не читает память процесса.
+A local Pokémon radar notifier for Windows. The app periodically captures selected screen regions, reads them with OCR, compares the recognized text with your target Pokémon names, and sends a Windows notification and/or sound.
 
-## Запуск
+The app does not interact with the game, press keys, or read another process's memory.
 
-1. Установите Python 3.10+ и [Tesseract OCR](https://github.com/tesseract-ocr/tesseract). Для русских имён установите языковой пакет `rus`.
-2. В PowerShell из `D:\Pokms` выполните:
+## Download
 
-   ```powershell
-   py -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   py main.py
-   ```
+Download the latest Windows build from [GitHub Releases](https://github.com/asefae/pokemon-radar-notifier/releases/latest).
 
-3. Нажмите **«Выбрать область радара»**, укажите число областей, их названия и выделите каждую мышью на снимке рабочего стола. Можно добавить область радара и отдельную центральную область.
-4. Выберите область в списке и нажмите **«Проверить область»**, чтобы увидеть захваченный фрагмент.
-5. Введите Pokémon через запятую или с новой строки. Настройте захват (100–1000 мс, по умолчанию 150), OCR (200–2000 мс, по умолчанию 300), режим обработки `fast`/`balanced`/`accurate`, OCR/fuzzy threshold, cooldown и число подтверждений потери, затем нажмите **«Сохранить»** и **«Запустить»**.
+Tesseract OCR must be installed separately; it is not included in the executable.
 
-Настройки сохраняются в `config.json` рядом с приложением. Путь Tesseract автоматически проверяется в `C:\Program Files\Tesseract-OCR\tesseract.exe` и `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`; при необходимости его можно изменить вручную в JSON. Кнопка «Открыть папку настроек» открывает папку конфигурации, а «Экспортировать лог» сохраняет историю в TXT.
+## Requirements
 
-Telegram необязателен: создайте бота через BotFather, узнайте `chat_id`, укажите `telegram_token` и `telegram_chat_id` в `config.json`, включите `telegram_enabled` и нажмите «Проверить Telegram». Токен не публикуйте и не добавляйте в исходный код. Скриншоты в Telegram по умолчанию не отправляются.
+- Windows
+- Python 3.10 or later (only if running from source)
+- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+- For Russian Pokémon names, install the Tesseract `rus` language data
 
-Если зависимость или Tesseract не установлены, приложение покажет понятную ошибку в журнале. Для Windows toast установите `winotify`; без него мониторинг и звуковые уведомления всё равно доступны.
+## Run from source
 
-## Проверки
+In PowerShell, open the project folder and run:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+py main.py
+```
+
+## Configure the app
+
+1. Select **Choose radar area**, enter the number and names of the screen regions, then drag over each area in the desktop screenshot. You can add radar areas and a separate central area.
+2. Select an area and click **Preview area** to verify the captured image.
+3. Enter Pokémon names separated by commas or new lines.
+4. Adjust the capture interval (100–1000 ms; default 150 ms), OCR interval (200–2000 ms; default 300 ms), processing mode (`fast`, `balanced`, or `accurate`), OCR/fuzzy-match thresholds, cooldown, and lost-detection confirmation count.
+5. Click **Save**, then **Start**.
+
+Settings are stored in `config.json` next to the application. The app checks the standard Tesseract installation paths:
+
+- `C:\Program Files\Tesseract-OCR\tesseract.exe`
+- `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`
+
+If needed, you can change the executable path in the configuration file. **Open settings folder** opens the configuration location, and **Export log** saves the history as a TXT file.
+
+## Notifications
+
+Windows toast notifications and sound are available. The optional Telegram integration can be configured in the app:
+
+1. Create a bot with [BotFather](https://t.me/BotFather) and obtain your Telegram chat ID.
+2. Enter the bot token and chat ID in the app settings.
+3. Enable Telegram notifications and use **Test Telegram**.
+
+Never publish your Telegram bot token or commit it to the repository. Telegram screenshot sending is disabled by default.
+
+For Windows toast notifications, install `winotify`. Monitoring and sound notifications can still work without it. If a required dependency or Tesseract is missing, the app reports the error in its log.
+
+## OCR processing
+
+The current fallback mode uses a sequential OCR pipeline: a daemon thread captures the selected area with `mss` every 1000 ms, saves `debug_raw.png`, enlarges the grayscale image 3×, increases contrast, and runs Tesseract with `--psm 11`. In this mode, the capture/OCR worker queue, fuzzy matching, cooldown, active/lost detection, and Telegram notification pipeline are not used.
+
+**Test OCR now** performs one capture without matching or notifications and displays the raw OCR text in the window/log. Check that the captured image contains readable text before changing OCR settings.
+
+Processing modes:
+
+- `fast`: 3× LANCZOS scaling and two threshold variants.
+- `balanced`: adds contrast enhancement and adaptive thresholding.
+- `accurate`: uses 4× LANCZOS scaling and all available variants.
+
+Each variant is checked with Tesseract PSM 6 and 11. Matching is performed line by line with conservative corrections for common OCR mistakes, while the original target names are kept in notifications.
+
+For diagnostics, enable `debug_frames` or `pipeline_diagnostics`; processed variants are saved to `debug_directory`. The **Save raw/variants**, **OCR latest frame**, and **OCR saved frame** buttons show the recognized text and traceback. The status area reports capture dimensions and average pixel value, first valid frame readiness, text length, errors, processed frames, and latest-frame queue replacements. Tesseract is checked before monitoring starts; its path and version are recorded in the log.
+
+A Pokémon is notified once when first detected. Continued presence does not trigger repeated alerts. Disappearance is confirmed over multiple scans (default: 2); after a confirmed disappearance, the next appearance can trigger another alert even when cooldown is nonzero.
+
+## Tests
+
+Run the test suite and syntax check:
 
 ```powershell
 python -m unittest discover -s tests -v
 python -m compileall -q .
 ```
 
-## Ограничения и безопасность
+## Build the executable
 
-Для восстановления рабочего распознавания текущий запуск использует простой последовательный OCR-режим: один daemon-поток каждые 1000 мс захватывает выбранную область через `mss`, сохраняет `debug_raw.png`, увеличивает grayscale-кадр в 3 раза, усиливает контраст и вызывает Tesseract с `--psm 11`. CaptureWorker, OCRWorker, latest-frame queue, fuzzy matching, cooldown, active detection, lost confirmation и Telegram временно не участвуют в этом режиме.
-
-Кнопка «Тест OCR сейчас» выполняет один такой захват без matching и уведомлений и показывает полный raw OCR-текст в отдельном окне/журнале. Сначала нужно добиться непустого текста на реальном `debug_raw.png`, и только после этого возвращать оптимизацию.
-
-Режимы обработки: `fast` использует 3× LANCZOS и два порога, `balanced` добавляет контраст и адаптивный порог, `accurate` использует 4× LANCZOS и все варианты. Для каждого варианта проверяются Tesseract PSM 6 и 11, а совпадение выполняется по отдельным строкам с консервативными исправлениями OCR-опечаток. Исходные имена целей сохраняются в уведомлениях. Для диагностики включите `debug_frames` или `pipeline_diagnostics`; обработанные варианты сохраняются в
-`debug_directory`. Кнопки `Сохранить raw/variants`, `OCR последнего кадра` и `OCR сохранённого кадра`
-показывают исходный текст и полный traceback. В статусе видны размер/средний пиксель захвата,
-готовность первого валидного кадра, длина текста, ошибки, обработанные кадры и замены latest-frame
-очереди. Проверка Tesseract выполняется до запуска; при проблемах путь и версия пишутся в журнал.
-
-Состояние Pokémon обновляется после каждого полного OCR-цикла. Новое появление уведомляется один раз, продолжительное присутствие не повторяется, а исчезновение подтверждается несколькими последовательными циклами (`lost_confirmation_scans`, по умолчанию 2). После подтверждённого исчезновения следующее появление снова вызывает уведомление даже при ненулевом cooldown.
-
-## Сборка `.exe`
+To build with PyInstaller:
 
 ```powershell
 pip install pyinstaller
 pyinstaller --noconfirm --clean --onefile --windowed --name PokemonRadar main.py
 ```
 
-Или запустите готовый скрипт:
+Or run the included build script:
 
 ```powershell
 .\build_exe.ps1
 ```
 
-Запускайте `dist\PokemonRadar.exe`: приложение открывается как обычное Windows-приложение без консольного окна, а `config.json` создаётся рядом с `.exe`. Tesseract устанавливается отдельно и не входит в exe.
+The executable is created at `dist\PokemonRadar.exe`. It runs as a regular Windows app without a console window. The app creates `config.json` next to the executable. Tesseract must be installed separately.
